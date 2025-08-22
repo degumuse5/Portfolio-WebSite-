@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import { ReactNode } from "react";
+
 
 /** ULTRA PORTFOLIO — refined UI pass **/
 /** Press "/" for Command Palette. Click "Accent" to cycle neon colors. **/
@@ -133,7 +135,7 @@ const ACCENTS = [
   "#f472b6",
   "#f59e0b",
 ]; // blue, cyan, violet, green, pink, amber
-function hexToRgb(hex) {
+function hexToRgb(hex: string): [number, number, number] {
   const m = hex.replace("#", "");
   const v = parseInt(
     m.length === 3
@@ -153,10 +155,10 @@ function useAccent() {
     next: () => setI((x) => (x + 1) % ACCENTS.length),
   };
 }
-function useKey(key, handler) {
+function useKey(key: string, handler: () => void) {
   useEffect(() => {
-    const f = (e) => {
-      if (e.key === key && !e.target?.closest?.("input,textarea")) {
+    const f = (e: KeyboardEvent) => {
+      if (e.key === key && !(e.target as HTMLElement)?.closest?.("input,textarea")) {
         e.preventDefault();
         handler();
       }
@@ -167,9 +169,11 @@ function useKey(key, handler) {
 }
 
 // Tilt
+
 function useTilt() {
-  const ref = useRef(null);
-  function onMove(e) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  function onMove(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -180,25 +184,29 @@ function useTilt() {
     el.style.setProperty("--mx", `${e.clientX - r.left}px`);
     el.style.setProperty("--my", `${e.clientY - r.top}px`);
   }
+
   function onLeave() {
     const el = ref.current;
     if (!el) return;
     el.style.setProperty("--rx", "0");
     el.style.setProperty("--ry", "0");
   }
+
   return { ref, onMove, onLeave };
 }
 
 // ===== PRIMITIVES =====
-const Badge = ({ children }) => <span className="badge">{children}</span>;
-const Card = ({ children }) => <div className="card">{children}</div>;
-const Metric = ({ label, value }) => (
-  <div className="metric">
-    <div className="metric__value">{value}</div>
-    <div className="metric__label">{label}</div>
-  </div>
-);
-function TiltCard({ children }) {
+type BadgeProps = { children: ReactNode };
+const Badge = ({ children }: BadgeProps) => <span className="badge">{children}</span>;
+
+type CardProps = { children: ReactNode };
+const Card = ({ children }: CardProps) => <div className="card">{children}</div>;
+
+type TiltCardProps = {
+  children: ReactNode;
+};
+
+function TiltCard({ children }: TiltCardProps) {
   const { ref, onMove, onLeave } = useTilt();
   return (
     <div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="tilt">
@@ -206,8 +214,21 @@ function TiltCard({ children }) {
       <div className="tilt__shine" />
     </div>
   );
+
 }
-function TimelineGrid({ items }) {
+
+type TimelineItem = {
+  company: string;
+  role: string;
+  period?: string;
+  bullets: string[];
+};
+
+type TimelineGridProps = {
+  items: TimelineItem[];
+};
+
+function TimelineGrid({ items }: TimelineGridProps) {
   return (
     <div
       className="grid gap-8 auto-rows-auto 
@@ -260,9 +281,25 @@ function TimelineGrid({ items }) {
   );
 }
 
-function Carousel({ slides }) {
+
+type Slide = {
+  name: string;
+  image: string;
+  link?: string;
+  bullets: string[];
+  tech: string[];
+};
+
+type CarouselProps = {
+  slides: Slide[];
+};
+
+function Carousel({ slides }: CarouselProps) {
   const [i, setI] = useState(0);
-  const go = (d) => setI((x) => (x + d + slides.length) % slides.length);
+
+  const go = (d: number) =>
+    setI((x) => (x + d + slides.length) % slides.length);
+
   return (
     <div className="carousel">
       <button className="carousel__btn" onClick={() => go(-1)}>
@@ -301,7 +338,7 @@ function Carousel({ slides }) {
                       )}
                     </div>
                     <ul className="mt-2 space-y-1 text-gray-300 text-sm leading-relaxed">
-                      {p.bullets.map((b, j) => (
+                      {p.bullets.map((b: string, j: number) => (
                         <li
                           key={j}
                           className="before:content-['✦'] before:mr-2 before:text-purple-400"
@@ -326,11 +363,23 @@ function Carousel({ slides }) {
     </div>
   );
 }
-function Spotlight({ open, setOpen }) {
-  const inputRef = useRef(null);
+
+
+
+type SpotlightProps = {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+function Spotlight({ open, setOpen }: SpotlightProps) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 60);
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 60);
+    }
   }, [open]);
+
   const actions = [
     { label: "Go to Projects", href: "#projects" },
     { label: "Go to Experience", href: "#experience" },
@@ -339,10 +388,12 @@ function Spotlight({ open, setOpen }) {
     { label: "GitHub", href: DATA.me.github },
     { label: "LinkedIn", href: DATA.me.linkedin },
   ];
+
   const [q, setQ] = useState("");
   const filtered = actions.filter((a) =>
     a.label.toLowerCase().includes(q.toLowerCase())
   );
+
   return open ? (
     <div className="spot" onClick={() => setOpen(false)}>
       <div className="spot__panel" onClick={(e) => e.stopPropagation()}>
@@ -369,6 +420,7 @@ function Spotlight({ open, setOpen }) {
     </div>
   ) : null;
 }
+
 function AuroraBG() {
   return (
     <div aria-hidden className="bgfx">
@@ -667,5 +719,5 @@ export default function UltraPortfolio() {
         @media (max-width:920px){.hero__inner{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.proj{grid-template-columns:1fr}.contact{grid-template-columns:1fr}}
       `}</style>
     </div>
-  );
+  ); 
 }
